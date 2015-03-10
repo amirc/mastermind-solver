@@ -5,22 +5,23 @@ import functools
 
 
 def csp(slots, options, guesses):
-    domains = [range(slots) for i in range(options)]
+    domains = [list(range(options)) for i in range(slots)]
 
     # Check unary constraints
-    for guess in guesses:
-        if not guess[1]:
-            if not guess[2]:
+    for guess, bulls, cows in guesses:
+        if not bulls:
+            if not cows:
                 for i in range(slots):
                     for domain in domains:
                         if i in domain:
                             domain.remove(i)
                 continue
+                # TODO: maybe to delete this guess from guesses
             for i in range(slots):
                 if guess[0][i] in domains[i]:
                     domains[i].remove(guess[0][i])
 
-    assignment = csp_rec(slots, guesses, domains, {}, range(slots))
+    assignment = csp_rec(slots, guesses, domains, {}, list(range(slots)))
     answer = []
     for i in range(slots):
         answer.append(assignment[i])
