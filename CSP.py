@@ -84,7 +84,8 @@ class CSP:
             empty_slots -= bulls_dist
 
             cows_dist = org_cows - res_cows
-            if cows_dist < 0 or cows_dist > empty_slots:
+
+            if (cows_dist < 0 or cows_dist > empty_slots) and (bulls_dist == 0 or cows_dist + bulls_dist < 0):
                 return False
 
         return True

@@ -45,6 +45,8 @@ class TestSolValidation(unittest.TestCase):
         self.assertFalse(self.csp1._is_sol_valid({0: 3, 2: 2}), "Invalid guess")
         self.assertFalse(self.csp1._is_sol_valid({0: 2, 2: 3}), "Invalid guess")
         self.assertFalse(self.csp1._is_sol_valid({1: 2, 2: 3}), "Invalid guess")
+        #self.assertFalse(self.csp1._is_sol_valid({0: 3, 2: 4}), "Invalid guess")#TODO: not sure could be solved in O(1)
+
 
         self.assertTrue(self.csp1._is_sol_valid({0: 1}), "valid guess")
         self.assertTrue(self.csp1._is_sol_valid({0: 1, 2: 6}), "valid guess")
