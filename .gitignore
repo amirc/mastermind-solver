@@ -1,0 +1,14 @@
+# Created by https://www.gitignore.io
+
+### PyCharm ###
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
+
+*.iml
+
+## Directory-based project format:
+.idea/
+.idea/*
+
+## File-based project format:
+*.ipr
+*.iws
