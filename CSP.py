@@ -2,79 +2,101 @@ from random import shuffle
 from random import choice
 from collections import Counter
 import functools
+from copy import copy
 
 
-def csp(slots, options, guesses):
-    domains = [list(range(options)) for i in range(slots)]
+# How to use:
+# problem = CSP(3,5)
+# problem.insert_guess([1,2,3], 2, 1)
+# print ("Best solution " + str(problem.generate_guess()) + "?") # output: [1,4,3]
+class CSP:
+    def __init__(self, slots, options):
+        self._domains = [list(range(options)) for i in range(slots)]
+        self._guesses = list()
+        self._slots = slots
+        self._options = options
 
-    # Check unary constraints
-    for guess, bulls, cows in guesses:
+    def insert_guess(self, guess, bulls, cows):
+        self._guesses += [guess, bulls, cows]
         if not bulls:
             if not cows:
-                for i in range(slots):
-                    for domain in domains:
+                # TODO: maybe to delete this guess from guesses
+                for i in range(self._slots):
+                    for domain in self._domains:
                         if i in domain:
                             domain.remove(i)
-                continue
-                # TODO: maybe to delete this guess from guesses
-            for i in range(slots):
-                if guess[0][i] in domains[i]:
-                    domains[i].remove(guess[0][i])
+            else:
+                for i in range(self._slots):
+                    if guess[0][i] in self._domains[i]:
+                        self._domains[i].remove(guess[0][i])
 
-    assignment = csp_rec(slots, guesses, domains, {}, list(range(slots)))
-    answer = []
-    for i in range(slots):
-        answer.append(assignment[i])
+    def generate_guess(self):
+        assignment = self._csp_rec({}, list(range(self._slots)))
 
-    return answer
+        answer = []
+        for i in range(self._slots):
+            answer.append(assignment[i])
 
+        return answer
 
-def csp_rec(slots, guesses, domains, partial, remaining):
-    # Return the assignment if it is a full assignment.
-    if not remaining:
-        return partial
+    def _csp_rec(self, partial_sol, remaining):
+        # Return the assignment if it is a full assignment.
+        if not remaining:
+            return partial_sol
 
-    to_fill = choose_var(remaining, domains)
-    vals = order_val(to_fill, domains[to_fill], guesses)
+        to_fill = self._choose_var(remaining)
+        vals = self._order_val(to_fill)
 
-    for val in vals:
-        print(val)
+        for val in vals:
+            tmp_sol = copy(partial_sol)
+            tmp_sol[to_fill] = val
+            if self._is_sol_valid(tmp_sol):
+                tmp_res = self._csp_rec
+                if tmp_res:
+                    return tmp_res
 
+        return False
 
-def choose_var(remaining, domains):
-    sorted_rem = sorted(remaining, key=lambda x: len(domains[x]))
-    return sorted_rem[0]
+    def _is_sol_valid(self, sol):
+        for guess, bulls, cows in self._guesses:
+            max_cows = 3
+        return False
 
+    def _choose_var(self, remaining):
+        sorted_rem = sorted(remaining, key=lambda x: len(self._domains[x]))
+        return sorted_rem[0]
 
-def comp(val1, val2, exact_count, near_count):
-    exact_diff = exact_count[val2] - exact_count[val1]
-    near_diff = near_count[val2] - near_count[val1]
+    def _order_val(self, slot):
+        domain = self._domains[slot]
+        exact_count = Counter()
+        near_count = Counter()
 
-    if exact_diff:
-        return exact_diff
+        for val in domain:
+            exact_count[val] = 0
+            near_count[val] = 0
 
-    if near_diff:
-        return near_diff
+        #TODO: To make this calculation once for all vals or to make it depended on current solution
+        for guess in self._guesses:
+            if guess[1]:
+                exact_count[guess[0][slot]] += 1
 
-    return choice([-1, 1])
+            if guess[2]:
+                to_update = set(guess[0])
+                to_update.remove(guess[0][slot])
+                near_count.update(to_update)
 
+        # Send to helper which sorts by exact matches and near matches
+        return sorted(domain, key=functools.cmp_to_key(lambda x, y: self._comp(x, y, exact_count, near_count)))
 
-def order_val(slot, domain, guesses):
-    exact_count = Counter()
-    near_count = Counter()
+    #TODO: make static(?):
+    def _comp(self, val1, val2, exact_count, near_count):
+        exact_diff = exact_count[val2] - exact_count[val1]
+        near_diff = near_count[val2] - near_count[val1]
 
-    for val in domain:
-        exact_count[val] = 0
-        near_count[val] = 0
+        if exact_diff:
+            return exact_diff
 
-    for guess in guesses:
-        if guess[1]:
-            exact_count[guess[0][slot]] += 1
+        if near_diff:
+            return near_diff
 
-        if guess[2]:
-            to_update = set(guess[0])
-            to_update.remove(guess[0][slot])
-            near_count.update(to_update)
-
-    # Send to helper which sorts by exact matches and near matches
-    return sorted(domain, key = functools.cmp_to_key(lambda x, y: comp(x, y, exact_count, near_count)))
+        return choice([-1, 1])
