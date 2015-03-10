@@ -3,15 +3,19 @@ from collections import Counter
 
 
 class Game:
-    def __init__(self, slots, options, code=[]):
+    def __init__(self, slots, options, code=None):
         self._slots = slots
         self._options = options
         self.guesses = set()
         self._num_guess = 0
-        self._code = code
-        if not code:
+
+        if code:
+            self._code = code
+        else:
+            self._code = list()
             for i in range(slots):
                 self._code.append(random.randint(0, options - 1))
+
         self._code_count = Counter(self._code)
 
     def check_guess(self, guess):
