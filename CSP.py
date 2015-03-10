@@ -1,6 +1,7 @@
 from random import shuffle
 from random import choice
 from collections import Counter
+import functools
 
 
 def csp(slots, options, guesses):
@@ -75,4 +76,4 @@ def order_val(slot, domain, guesses):
             near_count.update(to_update)
 
     # Send to helper which sorts by exact matches and near matches
-    return sorted(domain, cmp=lambda x, y: comp(x, y, exact_count, near_count))
+    return sorted(domain, key = functools.cmp_to_key(lambda x, y: comp(x, y, exact_count, near_count)))
