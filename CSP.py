@@ -9,6 +9,9 @@ from copy import copy
 # problem = CSP(3,5)
 # problem.insert_guess([1,2,3], 2, 1)
 # print ("Best solution " + str(problem.generate_guess()) + "?") # output: [1,4,3]
+from Mastermind import Game
+
+
 class CSP:
     def __init__(self, slots, options):
         self._domains = [list(range(options)) for i in range(slots)]
@@ -17,7 +20,7 @@ class CSP:
         self._options = options
 
     def insert_guess(self, guess, bulls, cows):
-        self._guesses += [guess, bulls, cows]
+        self._guesses += [(guess, bulls, cows)]
         if not bulls:
             if not cows:
                 # TODO: maybe to delete this guess from guesses
@@ -58,9 +61,33 @@ class CSP:
         return False
 
     def _is_sol_valid(self, sol):
+        empty_slots = self._slots - len(sol)
+        code = [-1] * self._slots
+
+        for k in sol:
+            code[k] = sol[k]
+
+        game = Game(self._slots, self._options, code)
+
         for guess, bulls, cows in self._guesses:
-            max_cows = 3
-        return False
+            game.check_guess(guess)
+            #TODO: improve performance by adding guesses until getting into conflict
+
+        for i, guess_obj in enumerate(game.guesses):
+            guess, res_bulls, res_cows = guess_obj
+            guess, org_bulls, org_cows = self._guesses[i]
+
+            bulls_dist = org_bulls - res_bulls
+            if bulls_dist < 0 or bulls_dist > empty_slots:
+                return False
+
+            empty_slots -= bulls_dist
+
+            cows_dist = org_cows - res_cows
+            if cows_dist < 0 or cows_dist > empty_slots:
+                return False
+
+        return True
 
     def _choose_var(self, remaining):
         sorted_rem = sorted(remaining, key=lambda x: len(self._domains[x]))
