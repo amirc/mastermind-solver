@@ -19,7 +19,7 @@ class Game:
         self._code_count = Counter(self._code)
 
     def check_guess(self, guess):
-        win_status = 0
+
         digit_count = Counter(guess)
 
         correct_digits = 0
@@ -37,7 +37,4 @@ class Game:
         self.guesses.add((tuple(guess), correct_slots, correct_digits - correct_slots))
         self._num_guess += 1
 
-        if correct_slots == self._slots:
-            win_status = 1
-
-        return win_status
+        return (tuple(guess), correct_slots, correct_digits - correct_slots)

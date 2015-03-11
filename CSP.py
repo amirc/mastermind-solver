@@ -33,6 +33,12 @@ class CSP:
                     if guess[0][i] in self._domains[i]:
                         self._domains[i].remove(guess[0][i])
 
+        if cows + bulls == self._slots:
+            possible = set(guess)
+            for i in range(self._slots):
+                new_domain = [x for x in possible if x in self._domains[i]]
+                self._domains[i] = new_domain
+
     def generate_guess(self):
         assignment = self._csp_rec({}, list(range(self._slots)))
 
@@ -54,7 +60,9 @@ class CSP:
             tmp_sol = copy(partial_sol)
             tmp_sol[to_fill] = val
             if self._is_sol_valid(tmp_sol):
-                tmp_res = self._csp_rec
+                tmp_remaining = copy(remaining)
+                tmp_remaining.remove(to_fill)
+                tmp_res = self._csp_rec(tmp_sol, tmp_remaining)
                 if tmp_res:
                     return tmp_res
 
