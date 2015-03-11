@@ -30,8 +30,8 @@ class CSP:
                             domain.remove(i)
             else:
                 for i in range(self._slots):
-                    if guess[0][i] in self._domains[i]:
-                        self._domains[i].remove(guess[0][i])
+                    if guess[i] in self._domains[i]:
+                        self._domains[i].remove(guess[i])
 
         if cows + bulls == self._slots:
             possible = set(guess)
@@ -77,23 +77,18 @@ class CSP:
 
         game = Game(self._slots, self._options, code)
 
-        for guess, bulls, cows in self._guesses:
-            game.check_guess(guess)
-            #TODO: improve performance by adding guesses until getting into conflict
-
-        for i, guess_obj in enumerate(game.guesses):
-            guess, res_bulls, res_cows = guess_obj
-            guess, org_bulls, org_cows = self._guesses[i]
+        for guess, org_bulls, org_cows in self._guesses:
+            guess, res_bulls, res_cows = game.check_guess(guess)
 
             bulls_dist = org_bulls - res_bulls
             if bulls_dist < 0 or bulls_dist > empty_slots:
                 return False
 
-            empty_slots -= bulls_dist
+            tmp_empty_slots = empty_slots - bulls_dist
 
             cows_dist = org_cows - res_cows
 
-            if (cows_dist < 0 or cows_dist > empty_slots) and (bulls_dist == 0 or cows_dist + bulls_dist < 0):
+            if (cows_dist < 0 or cows_dist > tmp_empty_slots) and (bulls_dist == 0 or cows_dist + bulls_dist < 0):
                 return False
 
         return True

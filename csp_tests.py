@@ -78,6 +78,19 @@ class TestSolValidation(unittest.TestCase):
         self.assertTrue(self.csp1._is_sol_valid(to_guess([1, 6, 6])), "Valid guess")
         self.assertTrue(self.csp1._is_sol_valid(to_guess([1, 5, 6])), "Valid guess")
 
+    def test_basic_multi_guesses_partial2(self):
+        # 4, 0, 3
+        self.csp1.insert_guess([0, 0, 1], 1, 0)
+        self.csp1.insert_guess([0, 2, 4], 0, 2)
+
+        self.assertTrue(self.csp1._is_sol_valid({0: 4}), "Valid guess")
+
+    def test_basic_multi_guesses_partial3(self):
+        # 4, 0, 3
+        self.csp1.insert_guess([2, 0, 2], 1, 0)
+        self.csp1.insert_guess([0, 0, 3], 2, 0)
+
+        self.assertTrue(self.csp1._is_sol_valid({0: 4}), "Valid guess")
 """
     def test_complex_guesses_partial(self):
         self.csp1.insert_guess([1, 1, 1], 1, 0)
