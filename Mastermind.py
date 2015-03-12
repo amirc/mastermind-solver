@@ -6,7 +6,7 @@ class Game:
     def __init__(self, slots, options, code=None):
         self._slots = slots
         self._options = options
-        self.guesses = set()
+        self.guesses = []
         self._num_guess = 0
 
         if code:
@@ -34,7 +34,7 @@ class Game:
             if self._code[i] == guess[i]:
                 correct_slots += 1
 
-        self.guesses.add((tuple(guess), correct_slots, correct_digits - correct_slots))
+        self.guesses.append((tuple(guess), correct_slots, correct_digits - correct_slots))
         self._num_guess += 1
 
         return (tuple(guess), correct_slots, correct_digits - correct_slots)

@@ -25,9 +25,7 @@ class CSP:
             if not cows:
                 # TODO: maybe to delete this guess from guesses
                 for i in range(self._slots):
-                    for domain in self._domains:
-                        if i in domain:
-                            domain.remove(i)
+                    self._domains[i] = [x for x in self._domains[i] if x not in guess]
             else:
                 for i in range(self._slots):
                     if guess[i] in self._domains[i]:
@@ -94,6 +92,7 @@ class CSP:
         return True
 
     def _choose_var(self, remaining):
+        shuffle(remaining)
         sorted_rem = sorted(remaining, key=lambda x: len(self._domains[x]))
         return sorted_rem[0]
 

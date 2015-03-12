@@ -6,6 +6,7 @@ from CSP import CSP
 class TestSolValidation(unittest.TestCase):
     def setUp(self):
         self.csp1 = CSP(3, 6)
+        self.csp2 = CSP(4, 6)
 
     def test_empty_csp(self):
         self.assertTrue(self.csp1._is_sol_valid(to_guess([1, 4, 1])), "Empty guess, all should be valid")
@@ -91,6 +92,13 @@ class TestSolValidation(unittest.TestCase):
         self.csp1.insert_guess([0, 0, 3], 2, 0)
 
         self.assertTrue(self.csp1._is_sol_valid({0: 4}), "Valid guess")
+
+    def test_zero_result(self):
+        self.csp2.insert_guess((0,0,2,3),0,0)
+        for domain in self.csp2._domains:
+            self.assertEqual(domain, [1,4,5])
+
+
 """
     def test_complex_guesses_partial(self):
         self.csp1.insert_guess([1, 1, 1], 1, 0)
