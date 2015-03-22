@@ -99,11 +99,17 @@ class Trainer:
         self._game_config = game_config
         self._agent = Agent(self._game_config, actions, alpha, epsilon, gamma, feature_extractor, learned_data)
 
-    def train(self, num_of_games):
+    def train(self, num_of_games, max_tries):
         scores = []
+        over_max_games = 0
         for i in range(num_of_games):
             game = Game(self._game_config.slots, self._game_config.options)
+            try_i = 0
             while not game.is_won():
+                try_i += 1
+                if try_i > max_tries:
+                    over_max_games += 1
+                    break
                 cur_state = copy(game.get_state())
                 action = self._agent.generate_guess(cur_state)
 
@@ -120,7 +126,7 @@ class Trainer:
                 self._agent.update(cur_state, action, next_state, reward)
 
             scores.append(game.num_guess)
-        return scores
+        return scores, over_max_games
 
     def get_learn_data(self):
         return self._agent.weights
@@ -242,7 +248,7 @@ def simple_extract(game_config, state, action):
 
     res = dict()
     if state:
-        res[(action.__name__, 'turn')] = 0.9 / len(state)
+        res[(action.__name__, 'turn')] = 1 / (len(state) + 1)
     else:
         res[(action.__name__, 'turn')] = 1
 
@@ -261,14 +267,14 @@ def simple_extract(game_config, state, action):
     mean_bulls /= game_config.slots
     mean_cows /= game_config.slots
 
-    res[(action.__name__, 'mean_domain')] = 1 / mean_domain
+    res[(action.__name__, 'mean_domain')] = 1 / (mean_domain + 1)
     if mean_bulls != 0:
-        res[(action.__name__, 'mean_bulls')] = 0.9 / mean_bulls
+        res[(action.__name__, 'mean_bulls')] = 1 / (mean_bulls + 1)
     else:
         res[(action.__name__, 'mean_bulls')] = 1
 
     if mean_cows != 0:
-        res[(action.__name__, 'mean_cows')] = 0.9 / mean_cows
+        res[(action.__name__, 'mean_cows')] = 1 / (mean_cows + 1)
 
     else:
         res[(action.__name__, 'mean_cows')] = 1
@@ -277,12 +283,14 @@ def simple_extract(game_config, state, action):
 
 game_conf = GameConfig(4, 6)
 training = Trainer(game_conf, simple_extract, 0.4, 0.5, 0.9, get_actions())
-scores = training.train(10000)
-print("Mean: ", statistics.me4an(scores))
+scores, fails = training.train(10000, 100)
+print("Mean: ", statistics.mean(scores))
 print("Variance: ", statistics.variance(scores))
+print("failed in ", fails)
 pprint(training.get_learn_data())
 
 winning = Trainer(game_conf, simple_extract, 0, 0, 0, get_actions(), training.get_learn_data())
-scores = winning.train(1000)
+scores, fails = winning.train(1000, 100)
 print("Mean: ", statistics.mean(scores))
 print("Variance: ", statistics.variance(scores))
+print("failed in ", fails)
