@@ -44,7 +44,10 @@ class Game:
         return self._slots
 
     def is_won(self):
-        return self.guesses[-1][1] == self._slots
+        if not self.guesses:
+            return False
+
+        return (self.guesses[-1])[1] == self._slots
 
     @property
     def num_guess(self):
