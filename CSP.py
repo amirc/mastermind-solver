@@ -18,6 +18,8 @@ class CSP:
         self._guesses = list()
         self._slots = slots
         self._options = options
+        self._bull_count = [Counter() for i in range(slots)]
+        self._cow_count = [Counter() for i in range(slots)]
 
     def insert_guess(self, guess, bulls, cows):
         self._guesses += [(guess, bulls, cows)]
@@ -36,6 +38,8 @@ class CSP:
             for i in range(self._slots):
                 new_domain = [x for x in possible if x in self._domains[i]]
                 self._domains[i] = new_domain
+
+        self._update_counters(guess, bulls, cows)
 
     def generate_guess(self):
         assignment = self._csp_rec({}, list(range(self._slots)))
@@ -91,32 +95,29 @@ class CSP:
 
         return True
 
+    # TODO: docs: doesn't change a thing
     def _choose_var(self, remaining):
         shuffle(remaining)
         sorted_rem = sorted(remaining, key=lambda x: len(self._domains[x]))
         return sorted_rem[0]
 
+    def _update_counters(self, guess, bulls, cows):
+        for slot in range(self._slots):
+            if bulls:
+                self._bull_count[slot][guess[slot]] += 1
+
+            if cows:
+                to_update = set(guess)
+                to_update.remove(guess[slot])
+                self._cow_count[slot].update(to_update)
+
     def _order_val(self, slot):
         domain = self._domains[slot]
-        exact_count = Counter()
-        near_count = Counter()
-
-        for val in domain:
-            exact_count[val] = 0
-            near_count[val] = 0
-
-        #TODO: To make this calculation once for all vals or to make it depended on current solution
-        for guess in self._guesses:
-            if guess[1]:
-                exact_count[guess[0][slot]] += 1
-
-            if guess[2]:
-                to_update = set(guess[0])
-                to_update.remove(guess[0][slot])
-                near_count.update(to_update)
 
         # Send to helper which sorts by exact matches and near matches
-        return sorted(domain, key=functools.cmp_to_key(lambda x, y: self._comp(x, y, exact_count, near_count)))
+        return sorted(domain, key=functools.cmp_to_key(
+            lambda x, y: self._comp(x, y, self._bull_count[slot], self._cow_count[slot]))
+        )
 
     #TODO: make static(?):
     def _comp(self, val1, val2, exact_count, near_count):

@@ -38,3 +38,17 @@ class Game:
         self._num_guess += 1
 
         return (tuple(guess), correct_slots, correct_digits - correct_slots)
+
+    @property
+    def slots(self):
+        return self._slots
+
+    def is_won(self):
+        return self.guesses[-1][1] == self._slots
+
+    @property
+    def num_guess(self):
+        return self._num_guess
+
+    def get_state(self):
+        return self.guesses
