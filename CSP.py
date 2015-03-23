@@ -18,8 +18,12 @@ class CSP:
         self._guesses = list()
         self._slots = slots
         self._options = options
-        self._bull_count = [Counter() for i in range(slots)]
-        self._cow_count = [Counter() for i in range(slots)]
+
+        # noinspection PyTypeChecker
+        empty_dict = dict([[i, 0] for i in range(options)])
+
+        self._bull_count = [Counter(empty_dict) for i in range(slots)]
+        self._cow_count = [Counter(empty_dict) for i in range(slots)]
 
     def insert_guess(self, guess, bulls, cows):
         self._guesses += [(guess, bulls, cows)]
@@ -119,7 +123,7 @@ class CSP:
             lambda x, y: self._comp(x, y, self._bull_count[slot], self._cow_count[slot]))
         )
 
-    #TODO: make static(?):
+    # TODO: make static(?):
     def _comp(self, val1, val2, exact_count, near_count):
         exact_diff = exact_count[val2] - exact_count[val1]
         near_diff = near_count[val2] - near_count[val1]
