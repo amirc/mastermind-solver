@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from CSP import CSP
 from Mastermind import Game
 import statistics
@@ -11,6 +13,9 @@ def main(args):
         slots = int(args[0])
         options = int(args[1])
         games = int(args[2])
+        heuristic = None
+        if len(args) == 4:
+            heuristic = int(args[3])
         assert (slots > 0 and options > 0 and games > 0)
 
     except:
@@ -24,7 +29,7 @@ def main(args):
     begin = time()
     for i in range(games):
         game = Game(slots, options)
-        csp = CSP(slots, options)
+        csp = CSP(slots, options, heuristic)
         while True:
             guess = csp.generate_guess()
             result = game.check_guess(guess)

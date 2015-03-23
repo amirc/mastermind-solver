@@ -13,13 +13,14 @@ from Mastermind import Game
 
 
 class CSP:
-    def __init__(self, slots, options):
+    def __init__(self, slots, options, heuristic):
         self._domains = [list(range(options)) for i in range(slots)]
         self._guesses = list()
         self._slots = slots
         self._options = options
         self._bull_count = [Counter() for i in range(slots)]
         self._cow_count = [Counter() for i in range(slots)]
+        self._heuristic = heuristic or 1
 
     def insert_guess(self, guess, bulls, cows):
         self._guesses += [(guess, bulls, cows)]
@@ -112,12 +113,18 @@ class CSP:
                 self._cow_count[slot].update(to_update)
 
     def _order_val(self, slot):
-        domain = self._domains[slot]
+        shuffle(self._domains[slot])
 
-        # Send to helper which sorts by exact matches and near matches
-        return sorted(domain, key=functools.cmp_to_key(
-            lambda x, y: self._comp(x, y, self._bull_count[slot], self._cow_count[slot]))
-        )
+        if self._heuristic == 1:
+            return self._domains[slot]
+
+        elif self._heuristic == 2:
+            domain = self._domains[slot]
+
+            # Send to helper which sorts by exact matches and near matches
+            return sorted(domain, key=functools.cmp_to_key(
+                lambda x, y: self._comp(x, y, self._bull_count[slot], self._cow_count[slot]))
+            )
 
     #TODO: make static(?):
     def _comp(self, val1, val2, exact_count, near_count):
