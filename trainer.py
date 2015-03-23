@@ -4,7 +4,7 @@ from pprint import pprint
 import statistics
 from sys import argv
 from Mastermind import Game
-from actions import get_actions, generate_actions_func
+from actions import generate_actions_func
 from agent import Agent
 from extractors import simple_extract
 from game_config import GameConfig

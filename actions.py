@@ -161,7 +161,7 @@ class AllDifferentGuess(Action):
 
     def action(self, game_config, state):
         self._counter += 1
-        all_different_guess(game_config, state)
+        return all_different_guess(game_config, state)
 
     def valid(self, state):
         return self._counter < self._options
@@ -228,7 +228,7 @@ def generate_actions_func(game_config):
         res = list()
         for action in all_actions:
             if action.valid(state):
-                res.append(action)
+                res.append(action.action)
         return res
 
     return get_actions
