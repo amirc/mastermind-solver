@@ -158,8 +158,9 @@ class AllDifferentGuess(Action):
         super().__init__(game_config)
         self._counter = 0
         self._options = factorial(game_config.options) / factorial(game_config.options - game_config.slots)
+        self.action = self.all_diff_guess
 
-    def action(self, game_config, state):
+    def all_diff_guess(self, game_config, state):
         self._counter += 1
         return all_different_guess(game_config, state)
 
