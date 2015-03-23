@@ -3,23 +3,24 @@ from copy import copy
 from pprint import pprint
 import random
 import statistics
+from sys import argv
 from CSP import CSP
 from Mastermind import Game
 
 
 class Agent:
-    def __init__(self, game_config, actions, alpha, epsilon, discount, feature_extractor, learned_data=None):
+    def __init__(self, game_config, get_available_actions, alpha, epsilon, discount, feature_extractor, learned_data=None):
         self._feature_extractor = feature_extractor
         self._alpha = alpha
         self._epsilon = epsilon
-        self._actions = actions
+        self._get_actions = get_available_actions
         self._game_config = game_config
         self._discount = discount
         self._weights = learned_data or dict()
 
-    def generate_guess(self, state):
+    def generate_action(self, state):
         if random.random() < self._epsilon:
-            return random.choice(self._actions)
+            return random.choice(self._get_actions(state))
         else:
             return self.get_policy(state)
 
@@ -27,7 +28,7 @@ class Agent:
         best_act = []
         best_val = -float('inf')
 
-        for action in self._actions:
+        for action in self._get_actions(state):
 
             val = self._get_qvalue(state, action)
 
@@ -38,11 +39,6 @@ class Agent:
                 best_val = val
                 best_act = [action]
 
-        if not best_act:
-            print('wtf?')
-            print('best_val', best_val)
-            print('best_act', best_act)
-            print('action1-score', self._get_qvalue(state, self._actions[0]))
         return random.choice(best_act)
 
     def _get_qvalue(self, state, action):
@@ -99,8 +95,9 @@ class Trainer:
         self._game_config = game_config
         self._agent = Agent(self._game_config, actions, alpha, epsilon, gamma, feature_extractor, learned_data)
 
-    def train(self, num_of_games, max_tries):
+    def train(self, num_of_games, max_tries, action_counter=None):
         scores = []
+        reward_max = (self._game_config.slots + self._game_config.slots) / 2
         over_max_games = 0
         for i in range(num_of_games):
             game = Game(self._game_config.slots, self._game_config.options)
@@ -111,15 +108,18 @@ class Trainer:
                     over_max_games += 1
                     break
                 cur_state = copy(game.get_state())
-                action = self._agent.generate_guess(cur_state)
+                action = self._agent.generate_action(cur_state)
+
+                if action_counter is not None:
+                    action_counter.update([action.__name__])
 
                 game.check_guess(action(self._game_config, game.guesses))
 
                 # TODO: play with reward
                 if game.is_won():
-                    reward = 1 / game.num_guess
+                    reward = reward_max - game.num_guess
                 else:
-                    reward = 0  # - 1 / game.num_guess
+                    reward = 0
 
                 next_state = copy(game.get_state())
 
@@ -138,6 +138,7 @@ def random_guess(game_config, state):
         for i in range(game_config.slots):
             ret_val.append(random.randint(0, game_config.options - 1))
         return ret_val
+
     res = new_rnd()
 
     while res in map(lambda attempt: attempt[0], state):
@@ -166,21 +167,6 @@ def min_guess(game_config, state):
 
 
 def new_guess(game_config, state):
-    """
-    guessed_times = Counter()
-    for guess, bulls, cows in state:
-        guessed_times.update(guess)
-
-    guessed = [num for num in guessed_times.keys()]
-
-    num_remaining = game_config.options - len(guessed)
-
-    to_add = [num[0] for num in guessed_times.most_common(num_remaining)]
-
-    total = to_add + []
-
-
-    """
     guessed_times = Counter()
     for guess, bulls, cows in state:
         guessed_times.subtract(guess)
@@ -223,6 +209,21 @@ def max_guess(game_config, state):
     return res
 
 
+all_diff_counter = 0
+
+
+def all_different_guess(game_config, state):
+    all_diff_counter += 1
+    numbers = list(range(game_config.options))
+    res = list()
+    for i in range(game_config.slots):
+        tmp = random.choice(numbers)
+        res.append(tmp)
+        numbers.remove(tmp)
+
+    return res
+
+
 def max_valid_guess(game_config, state):
     csp = CSP(game_config.slots, game_config.options)
     for guess, bulls, cows in state:
@@ -231,14 +232,63 @@ def max_valid_guess(game_config, state):
     return csp.generate_guess()
 
 
-def get_actions():
-    return [
+def valid_guess(game_config, state):
+    csp = CSP(game_config.slots, game_config.options)
+    for guess, bulls, cows in state:
+        csp.insert_guess(guess, bulls, cows)
+
+    def recursive_valid_guess(slot, cur_res=list()):
+        if slot == game_config.slots:
+            return cur_res
+        options = list(range(game_config.options))
+        random.shuffle(options)
+        for i in options:
+            tmp_res = copy(cur_res)
+            tmp_res += [[slot, i]]
+            if csp._is_sol_valid(dict(tmp_res)):
+                tmp_res = recursive_valid_guess(slot + 1, tmp_res)
+                if tmp_res:
+                    return tmp_res
+
+        return False
+
+    def to_ans(arr):
+        ans = [0] * game_config.slots
+        for k, v in arr:
+            ans[k] = v
+        return ans
+
+    return to_ans(recursive_valid_guess(0))
+
+
+def guesses_combination_guess(game_config, state):
+    def new_rnd():
+        tmp = list()
+        for i in range(game_config.slots):
+            tmp.append(random.choice([guess[i] for guess, bulls, cows in state]))
+        return tmp
+
+    res = new_rnd()
+
+    while res in map(lambda attempt: attempt[0], state):
+        res = new_rnd()
+
+    return res
+
+
+def get_actions(state):
+    default = [
+        all_different_guess,
         random_guess,
-        max_guess,
+        #max_guess,
         new_guess,
-        max_valid_guess,
-        min_guess
+        valid_guess,
+        #max_valid_guess,
+        #min_guess
     ]
+    if len(state) > 1:
+        default += [guesses_combination_guess]
+    return default
 
 
 def simple_extract(game_config, state, action):
@@ -246,51 +296,70 @@ def simple_extract(game_config, state, action):
     for guess, bulls, cows in state:
         csp.insert_guess(guess, bulls, cows)
 
+    def positive_normalize(val, steps):
+        return min(val, steps) / steps
+
     res = dict()
-    if state:
-        res[(action.__name__, 'turn')] = 1 / (len(state) + 1)
-    else:
-        res[(action.__name__, 'turn')] = 1
+
+    # var on slots domain len
+    # var_domain = statistics.variance([len(domain) for domain in csp._domains])
 
     # mean on slots domain len
+    mean_domain = statistics.mean([len(domain) for domain in csp._domains])
+
     # mean on how many different vals in bull counter
+    mean_bulls = statistics.mean([len(set(bull_slot.values())) for bull_slot in csp._bull_count])
+
+    # var on how many different vals in bull counter
+    var_bulls = statistics.variance([len(set(bull_slot.values())) for bull_slot in csp._bull_count])
+
     # mean on how many different vals in cow counter
-    mean_domain = 0
-    mean_bulls = 0
-    mean_cows = 0
-    for i in range(game_config.slots):
-        mean_domain += len(csp._domains[i])
-        mean_bulls += len(set(csp._bull_count[i].values()))
-        mean_cows += len(set(csp._cow_count[i].values()))
+    mean_cows = statistics.mean([len(set(cow_slot.values())) for cow_slot in csp._cow_count])
 
-    mean_domain /= game_config.slots
-    mean_bulls /= game_config.slots
-    mean_cows /= game_config.slots
+    # mean on how many different vals in cow counter
+    var_cows = statistics.variance([len(set(cow_slot.values())) for cow_slot in csp._cow_count])
 
-    res[(action.__name__, 'mean_domain')] = 1 / (mean_domain + 1)
-    if mean_bulls != 0:
-        res[(action.__name__, 'mean_bulls')] = 1 / (mean_bulls + 1)
-    else:
-        res[(action.__name__, 'mean_bulls')] = 1
+    guessed_times = Counter()
+    for guess, bulls, cows in state:
+        guessed_times.subtract(guess)
 
-    if mean_cows != 0:
-        res[(action.__name__, 'mean_cows')] = 1 / (mean_cows + 1)
+    unused_keys = len(set(range(game_config.options)).difference(set(guessed_times)))
 
-    else:
-        res[(action.__name__, 'mean_cows')] = 1
+    res[(action.__name__, 'unused_keys')] = positive_normalize(unused_keys, game_config.options)
+
+    res[(action.__name__, 'mean_domain')] = positive_normalize(mean_domain, game_config.slots)
+    res[(action.__name__, 'mean_bulls')] = positive_normalize(mean_bulls, game_config.options)
+    res[(action.__name__, 'var_bulls')] = positive_normalize(var_bulls, game_config.options)
+    res[(action.__name__, 'mean_cows')] = positive_normalize(mean_cows, game_config.options)
+    res[(action.__name__, 'var_cows')] = positive_normalize(var_cows, game_config.options)
+    if state:
+        res[(action.__name__, 'bulls_last_turn')] = positive_normalize(state[-1][1], game_config.options)
+        res[(action.__name__, 'cows_last_turn')] = positive_normalize(state[-1][2], game_config.options)
+
+    res[(action.__name__, 'bias')] = 1
 
     return res
 
-game_conf = GameConfig(4, 6)
-training = Trainer(game_conf, simple_extract, 0.4, 0.5, 0.9, get_actions())
-scores, fails = training.train(10000, 100)
-print("Mean: ", statistics.mean(scores))
-print("Variance: ", statistics.variance(scores))
-print("failed in ", fails)
-pprint(training.get_learn_data())
+if __name__ == '__main__':
+    _slots = int(argv[1])
+    _options = int(argv[2])
+    _alpha = float(argv[3])
+    _epsilon = float(argv[4])
+    _gamma = float(argv[5])
+    game_conf = GameConfig(_slots, _options)
+    training = Trainer(game_conf, simple_extract, _alpha, _epsilon, _gamma, get_actions)
+    for i in range(20):
+        print("After ", i * 1000, " games")
+        scores, fails = training.train(1000, 20)
+        print("Mean: ", statistics.mean(scores))
+        print("Variance: ", statistics.variance(scores))
+        print("failed in ", fails)
+    pprint(training.get_learn_data())
 
-winning = Trainer(game_conf, simple_extract, 0, 0, 0, get_actions(), training.get_learn_data())
-scores, fails = winning.train(1000, 100)
-print("Mean: ", statistics.mean(scores))
-print("Variance: ", statistics.variance(scores))
-print("failed in ", fails)
+    winning = Trainer(game_conf, simple_extract, 0, 0, 0, get_actions, training.get_learn_data())
+    actions_counter = Counter()
+    scores, fails = winning.train(2000, 20, actions_counter)
+    print("Mean: ", statistics.mean(scores))
+    print("Variance: ", statistics.variance(scores))
+    print("failed in ", fails)
+    pprint(actions_counter)
