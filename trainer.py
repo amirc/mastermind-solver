@@ -37,7 +37,7 @@ class Trainer:
 
                 # TODO: play with reward
                 if game.is_won():
-                    reward = reward_max - game.num_guess
+                    reward = max([0.5, reward_max - game.num_guess])*100
                 else:
                     reward = 0
 
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     _gamma = float(argv[5])
     game_conf = GameConfig(_slots, _options)
     training = Trainer(game_conf, simple_extract, _alpha, _epsilon, _gamma, generate_actions_func(game_conf))
-    for i in range(20):
+    for i in range(10):
         print("After ", i * 1000, " games")
         scores, fails = training.train(1000, 20)
         print("Mean: ", statistics.mean(scores))
@@ -70,8 +70,20 @@ if __name__ == '__main__':
 
     winning = Trainer(game_conf, simple_extract, 0, 0, 0, generate_actions_func(game_conf), training.get_learn_data())
     actions_counter = Counter()
-    scores, fails = winning.train(2000, 20, actions_counter)
+    scores, fails = winning.train(1000, 20, actions_counter)
     print("Mean: ", statistics.mean(scores))
     print("Variance: ", statistics.variance(scores))
     print("failed in ", fails)
     pprint(actions_counter)
+
+
+    winning = Trainer(game_conf, simple_extract, 0, 0, 0, generate_actions_func(game_conf), training.get_learn_data())
+    actions_counter = Counter()
+    scores, fails = winning.train(5000, 20, actions_counter)
+    print("Mean: ", statistics.mean(scores))
+    print("Variance: ", statistics.variance(scores))
+    print("failed in ", fails)
+    pprint(actions_counter)
+
+
+
