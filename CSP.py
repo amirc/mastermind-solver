@@ -13,7 +13,7 @@ from Mastermind import Game
 
 
 class CSP:
-    def __init__(self, slots, options, heuristic):
+    def __init__(self, slots, options, heuristic=None):
         self._domains = [list(range(options)) for i in range(slots)]
         self._guesses = list()
         self._slots = slots
