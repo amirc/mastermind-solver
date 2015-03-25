@@ -94,7 +94,7 @@ def all_different_guess(game_config, state):
 
 
 def max_valid_guess(game_config, state):
-    csp = CSP(game_config.slots, game_config.options)
+    csp = CSP(game_config.slots, game_config.options, 2)
     for guess, bulls, cows in state:
         csp.insert_guess(guess, bulls, cows)
 
@@ -102,10 +102,12 @@ def max_valid_guess(game_config, state):
 
 
 def valid_guess(game_config, state):
-    csp = CSP(game_config.slots, game_config.options)
+    csp = CSP(game_config.slots, game_config.options, 1)
     for guess, bulls, cows in state:
         csp.insert_guess(guess, bulls, cows)
 
+    return csp.generate_guess()
+    '''
     def recursive_valid_guess(slot, cur_res=list()):
         if slot == game_config.slots:
             return cur_res
@@ -128,7 +130,7 @@ def valid_guess(game_config, state):
         return ans
 
     return to_ans(recursive_valid_guess(0))
-
+    '''
 
 def guesses_combination_guess(game_config, state):
     def new_rnd():
@@ -195,7 +197,7 @@ class ValidGuess(Action):
 class MaxValidGuess(Action):
     def __init__(self, game_config):
         super().__init__(game_config)
-        self.action = max_guess
+        self.action = max_valid_guess
 
 
 class MinGuess(Action):

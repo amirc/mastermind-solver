@@ -41,13 +41,8 @@ def main(args):
 
     end = time()
 
-    print("Mean: ", statistics.mean(scores))
-    print("Variance: ", statistics.variance(scores))
-    print("Counter: ", Counter(scores))
-    worst_i = max(range(games), key=lambda i: scores[i])
-    best_i = min(range(games), key=lambda i: scores[i])
-    print("Worst: ", codes[worst_i], scores[worst_i])
-    print("Best: ", codes[best_i], scores[best_i])
+    print("Mean Score: ", statistics.mean(scores))
+    print("Score Variance: ", statistics.variance(scores))
     print("Average time (in seconds) per game: ", (end - begin) / games)
     print("Average time (in seconds) per guess: ", (end - begin) / sum(scores))
 
