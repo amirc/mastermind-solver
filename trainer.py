@@ -60,14 +60,14 @@ if __name__ == '__main__':
     _gamma = float(argv[5])
     _practice_games = 10000
     _games = 1000
-    if len(argv) > 6):
-        _practice_games = argv[6]
-        if _pratice_games < 1000 and _pratice_games:
-            print("pratice games must be above 1000 or 0")
-            return
+    if len(argv) > 6:
+        _practice_games = int(argv[6])
+        if _practice_games < 1000 and _pratice_games:
+            raise("pratice games must be above 1000 or 0")
+            
 
-    if len(argv) > 7):
-        _games = argv[7]
+    if len(argv) > 7:
+        _games = int(argv[7])
 
     game_conf = GameConfig(_slots, _options)
     training = Trainer(game_conf, simple_extract, _alpha, _epsilon, _gamma, generate_actions_func(game_conf))
