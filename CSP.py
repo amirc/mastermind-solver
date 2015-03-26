@@ -49,6 +49,9 @@ class CSP:
     def generate_guess(self):
         assignment = self._csp_rec({}, list(range(self._slots)))
 
+        if not assignment:
+            return False
+
         answer = []
         for i in range(self._slots):
             answer.append(assignment[i])
