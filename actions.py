@@ -148,12 +148,11 @@ def guesses_combination_guess(game_config, state):
 
 def generate_new_param_action(index):
     def new_param_guess(game_config, state):
-        print(index)
         used = [[] for j in range(game_config.slots)]
 
         for guess, bulls, cows in state:
             for j in range(game_config.slots):
-                used[j].append(guess[index])
+                used[j].append(guess[j])
 
         unused = [([x for x in range(game_config.options) if x not in used[j]], j) for j in range(game_config.slots)]
 
@@ -164,7 +163,7 @@ def generate_new_param_action(index):
         for j in range(game_config.slots):
             res.append(random.choice(used[j]))
 
-        for j in range(i):
+        for j in range(index):
             res[unused[j][1]] = random.choice(unused[j][0])
 
         return res
@@ -210,7 +209,7 @@ class NewParamGuess(Action):
 
         for guess, bulls, cows in state:
             for j in range(self._game_config.slots):
-                used[j].append(guess[self.num])
+                used[j].append(guess[j])
 
         have_unused = 0
 
