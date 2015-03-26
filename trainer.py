@@ -58,9 +58,20 @@ if __name__ == '__main__':
     _alpha = float(argv[3])
     _epsilon = float(argv[4])
     _gamma = float(argv[5])
+    _practice_games = 10000
+    _games = 1000
+    if len(argv) > 6):
+        _practice_games = argv[6]
+        if _pratice_games < 1000 and _pratice_games:
+            print("pratice games must be above 1000 or 0")
+            return
+
+    if len(argv) > 7):
+        _games = argv[7]
+
     game_conf = GameConfig(_slots, _options)
     training = Trainer(game_conf, simple_extract, _alpha, _epsilon, _gamma, generate_actions_func(game_conf))
-    for i in range(10):
+    for i in range(_practice_games//1000):
         print("After ", i * 1000, " games")
         scores, fails = training.train(1000, 20)
         print("Mean: ", statistics.mean(scores))
@@ -70,20 +81,8 @@ if __name__ == '__main__':
 
     winning = Trainer(game_conf, simple_extract, 0, 0, 0, generate_actions_func(game_conf), training.get_learn_data())
     actions_counter = Counter()
-    scores, fails = winning.train(1000, 20, actions_counter)
+    scores, fails = winning.train(_games, 20, actions_counter)
     print("Mean: ", statistics.mean(scores))
     print("Variance: ", statistics.variance(scores))
     print("failed in ", fails)
     pprint(actions_counter)
-
-
-    winning = Trainer(game_conf, simple_extract, 0, 0, 0, generate_actions_func(game_conf), training.get_learn_data())
-    actions_counter = Counter()
-    scores, fails = winning.train(5000, 20, actions_counter)
-    print("Mean: ", statistics.mean(scores))
-    print("Variance: ", statistics.variance(scores))
-    print("failed in ", fails)
-    pprint(actions_counter)
-
-
-
