@@ -62,9 +62,8 @@ if __name__ == '__main__':
     _games = 1000
     if len(argv) > 6:
         _practice_games = int(argv[6])
-        if _practice_games < 1000 and _pratice_games:
-            raise("pratice games must be above 1000 or 0")
-            
+        if _practice_games < 1000 and _practice_games:
+            raise Exception("practice games must be above 1000 or 0")
 
     if len(argv) > 7:
         _games = int(argv[7])

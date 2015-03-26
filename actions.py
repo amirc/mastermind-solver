@@ -146,6 +146,29 @@ def guesses_combination_guess(game_config, state):
 
     return res
 
+def generate_new_param_action(index):
+    def new_param_guess(game_config, state):
+        print(index)
+        used = [[] for j in range(game_config.slots)]
+
+        for guess, bulls, cows in state:
+            for j in range(game_config.slots):
+                used[j].append(guess[index])
+
+        unused = [([x for x in range(game_config.options) if x not in used[j]], j) for j in range(game_config.slots)]
+
+        unused = sorted(unused, key=lambda x: len(x[0]), reverse=True)
+
+        res = []
+
+        for j in range(game_config.slots):
+            res.append(random.choice(used[j]))
+
+        for j in range(i):
+            res[unused[j][1]] = random.choice(unused[j][0])
+
+        return res
+    return new_param_guess
 
 class Action(object):
     def __init__(self, game_config):
@@ -175,6 +198,27 @@ class RandomGuess(Action):
         super().__init__(game_config)
         self.action = random_guess
 
+class NewParamGuess(Action):
+    def __init__(self, game_config, i):
+        super().__init__(game_config)
+        self.action = generate_new_param_action(i)
+        self.num = i
+        self.action.__name__ = "new_param_guess_%s" % str(i)
+
+    def valid(self, state):
+        used = [[] for i in range(self._game_config.slots)]
+
+        for guess, bulls, cows in state:
+            for j in range(self._game_config.slots):
+                used[j].append(guess[self.num])
+
+        have_unused = 0
+
+        for elem in used:
+            if len(elem) < self.num:
+                have_unused += 1 
+
+        return len(state) > 0 and have_unused >= self.num
 
 class MaxGuess(Action):
     def __init__(self, game_config):
@@ -226,6 +270,8 @@ def generate_actions_func(game_config):
         MinGuess(game_config),
         GuessesCombinationGuess(game_config)
     ]
+    for i in range(game_config.slots):
+        all_actions.append(NewParamGuess(game_config, i + 1))
 
     def get_actions(state):
         res = list()
